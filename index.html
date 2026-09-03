@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>광운인공지능고등학교 학생 포털</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="global-error-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#D64545;color:#fff;font-size:12px;padding:6px 10px;text-align:center;"></div>
+<script>
+  window.addEventListener('error', function (e) {
+    var b = document.getElementById('global-error-banner');
+    if (b) { b.style.display = 'block'; b.textContent = '에러 발생: ' + e.message; }
+  });
+</script>
+
+<!-- LUCKY STAR EASTER EGG -->
+<button type="button" id="lucky-star-btn" onclick="clickLuckyStar()" aria-label="반짝이는 별" style="display:none">✨</button>
+<div id="lucky-popup-overlay" style="display:none" onclick="closeLuckyPopup()">
+  <div id="lucky-popup-card">
+    <img id="lucky-popup-img" alt="행운의 종띠" />
+    <div id="lucky-popup-text">행운의 종띠 등장!</div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div id="auth" class="view active">
+  <div class="auth-card">
+    <div class="auth-header">
+      <svg width="44" height="44" viewBox="0 0 100 100">
+        <g class="orbit-a"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="4" opacity="0.55"/></g>
+        <g class="orbit-b"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="4" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div class="auth-title">광운인공지능고등학교 학생 포털</div>
+      <div class="auth-sub">로그인하고 분실물센터를 이용해보세요</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab selected" id="auth-tab-login" onclick="setAuthMode('login')">로그인</button>
+      <button class="auth-tab" id="auth-tab-signup" onclick="setAuthMode('signup')">회원가입</button>
+    </div>
+    <div class="form-group" id="auth-name-group" style="display:none">
+      <label class="form-label">이름</label>
+      <input class="form-input" id="auth-name" placeholder="예: 홍길동" />
+    </div>
+    <div class="form-group" id="auth-email-group" style="display:none">
+      <label class="form-label">학교 이메일</label>
+      <input class="form-input" id="auth-email" placeholder="예: gildong@senedu.kr" />
+    </div>
+    <div class="form-group" id="auth-dept-group" style="display:none">
+      <label class="form-label">학과 (내 시간표 조회에 사용돼요)</label>
+      <div class="auth-dept-list" id="auth-dept-list"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">학번 (아이디로 사용)</label>
+      <input class="form-input" id="auth-id" placeholder="예: 20401" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">비밀번호</label>
+      <input class="form-input" type="password" id="auth-pw" placeholder="6자 이상" onkeydown="if(event.key==='Enter')submitAuth()" />
+    </div>
+    <div id="auth-error" class="auth-error" style="display:none"></div>
+    <button class="submit-btn" id="auth-submit-btn" onclick="submitAuth()">로그인</button>
+    <p class="auth-hint">회원가입은 @senedu.kr 학교 이메일이 있어야 가능해요. 로그인은 이후 학번과 비밀번호로 하시면 돼요. (계정 정보는 이 브라우저에만 저장됩니다)</p>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="view">
+  <div class="home-inner">
+    <div class="home-topbar">
+      <button class="admin-btn" onclick="openMyInfoModal()">내 정보</button>
+    </div>
+    <div class="home-header">
+      <button type="button" onclick="toggleAdmin()" aria-label="관리자" style="background:none;border:none;padding:0;cursor:pointer;" id="home-admin-logo-btn">
+        <svg width="56" height="56" viewBox="0 0 100 100">
+          <g class="orbit-a"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="4" opacity="0.55"/></g>
+          <g class="orbit-b"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="4" transform="rotate(60 50 50)" opacity="0.75"/></g>
+          <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+          <circle cx="82" cy="34" r="7" fill="#F07830"/>
+        </svg>
+      </button>
+      <p class="home-tagline">Kwangwoon AI High School · Est. 1934</p>
+      <h1 class="home-title">광운인공지능고등학교 학생 포털</h1>
+      <p class="home-sub" id="home-welcome">필요한 메뉴를 눌러 시작하세요</p>
+    </div>
+    <div id="home-exam-dday"></div>
+    <div class="menu-list">
+      <button class="menu-card active" onclick="showTimetable()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M9 4v17M15 4v17"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">시간표</div>
+        <div class="menu-card-desc">내 학번으로 우리 반 시간표를 바로 확인하세요</div>
+        <div class="menu-card-count">학반별 시간표</div>
+      </button>
+      <button class="menu-card active" onclick="showMeal()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3v7a3 3 0 0 1-3 3v8"/><path d="M8 3v6a2 2 0 0 0 4 0V3"/><path d="M10 3v18"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">급식정보</div>
+        <div class="menu-card-desc">이번 주 급식 메뉴와 영양 정보</div>
+        <div class="menu-card-count">08월 17일 ~ 08월 23일</div>
+      </button>
+      <button class="menu-card active" onclick="showSchedule()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">학교일정</div>
+        <div class="menu-card-desc">학사일정 확인과 개인 할 일 기록</div>
+        <div class="menu-card-count">2026학년도 학사일정</div>
+      </button>
+      <button class="menu-card active" onclick="showCert()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 12.9 17 22l-5-3-5 3 1.5-9.1"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">자격증·공모전</div>
+        <div class="menu-card-desc">추천 자격증과 교내외 공모전 일정을 확인하세요</div>
+        <div class="menu-card-count" id="home-cert-count">0건 안내</div>
+      </button>
+      <button class="menu-card active" onclick="showLostFound()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">분실물센터</div>
+        <div class="menu-card-desc">잃어버린 물건, 주운 물건을 등록하고 찾아보세요</div>
+        <div class="menu-card-count" id="home-count">0건 등록됨</div>
+      </button>
+      <button class="menu-card active" onclick="showSuggest()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">익명 건의함</div>
+        <div class="menu-card-desc">이름은 다른 학생에게 공개되지 않아요</div>
+        <div class="menu-card-count" id="home-suggest-count">0건 등록됨</div>
+      </button>
+      <button class="menu-card active" onclick="showPortfolio()">
+        <div class="menu-card-top">
+          <div class="menu-icon-wrap active-icon"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13V7a2 2 0 0 0-2-2h-4l-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h5"/><path d="M16 15l2 2 4-4"/></svg></div>
+          <span class="status-badge available">이용 가능</span>
+        </div>
+        <div class="menu-card-title">내 포트폴리오</div>
+        <div class="menu-card-desc">자격증·수상·프로젝트 이력을 한 페이지로 모아보세요</div>
+        <div class="menu-card-count" id="home-portfolio-count">0건 등록됨</div>
+      </button>
+    </div>
+    <div class="tip-card" id="home-tip-card">
+      <div class="tip-label">오늘의 AI 상식 · 코딩 팁</div>
+      <div class="tip-text" id="home-tip-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTFOLIO -->
+<div id="portfolio" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">내 포트폴리오</div>
+        <div class="lf-sub">나만의 이력을 기록하고 한 페이지로 뽑아보세요</div>
+      </div>
+    </div>
+    <div class="suggest-note">여기 기록한 이력은 나에게만 보여요. 자기소개서나 학생부 작성 시 참고 자료로 활용해보세요.</div>
+    <div class="tt-toolbar">
+      <button class="tt-toggle-btn" onclick="openPortfolioModal()">＋ 이력 추가</button>
+      <button class="tt-toggle-btn" onclick="printPortfolio()">한 페이지로 보기 · PDF 저장</button>
+    </div>
+    <div id="portfolio-container"></div>
+  </div>
+</div>
+
+<!-- PORTFOLIO ADD MODAL -->
+<div id="portfolio-overlay" class="overlay" style="display:none" onclick="closePortfolioIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">이력 추가</div>
+      <button class="close-btn" onclick="closePortfolioModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">구분</label>
+      <div class="auth-dept-list" id="portfolio-form-category"></div>
+    </div>
+    <div class="form-group"><label class="form-label">제목</label><input class="form-input" id="portfolio-form-title" placeholder="예: 정보처리기능사 취득" /></div>
+    <div class="form-group">
+      <label class="form-label">날짜 (선택)</label>
+      <div class="form-group-row">
+        <select class="tt-select" id="portfolio-form-year"></select>
+        <select class="tt-select" id="portfolio-form-month"></select>
+        <select class="tt-select" id="portfolio-form-day"></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">설명 (선택)</label><textarea class="form-input" id="portfolio-form-desc" rows="3" placeholder="구체적인 활동 내용, 역할, 배운 점 등을 적어두면 나중에 자기소개서 쓸 때 편해요"></textarea></div>
+    <div id="portfolio-form-error" class="form-error" style="display:none"></div>
+    <button class="submit-btn" onclick="submitPortfolioForm()">저장하기</button>
+  </div>
+</div>
+
+<!-- PORTFOLIO PRINT VIEW -->
+<div id="portfolio-print-overlay" class="overlay" style="display:none" onclick="closePortfolioPrintIfOutside(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">포트폴리오 미리보기</div>
+      <button class="close-btn" onclick="closePortfolioPrint()">✕</button>
+    </div>
+    <div id="portfolio-print-content"></div>
+    <button class="submit-btn" onclick="window.print()" style="margin-top:16px">PDF로 저장 / 인쇄</button>
+    <p style="font-size:11px;color:var(--slate);text-align:center;margin-top:10px;line-height:1.6;">버튼을 누르면 인쇄 대화상자가 열려요. <b>대상(프린터)</b>을 "PDF로 저장"으로 선택하면 파일로 저장돼요.</p>
+  </div>
+</div>
+
+<!-- LOST & FOUND -->
+<div id="lostfound" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+      <button class="admin-btn" id="admin-toggle-btn" onclick="toggleAdmin()"><svg class="icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg> 관리자</button>
+      <button class="admin-btn" id="admin-reset-btn" style="display:none" onclick="resetAccounts()">계정기록 초기화</button>
+    </div>
+    <div id="sync-error" class="sync-error" style="display:none">저장에 실패했어요. 새로고침하면 내용이 사라질 수 있어요.</div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">분실물센터</div>
+        <div class="lf-sub">잃어버린 물건, 주운 물건을 함께 찾아요</div>
+      </div>
+    </div>
+    <div class="search-box">
+      <span style="display:flex;color:var(--slate)"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span>
+      <input id="search-input" placeholder="물품명, 장소로 검색" oninput="renderItems()" />
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setFilter('all',this)">전체</button>
+      <button class="tab-btn" onclick="setFilter('lost',this)">분실물</button>
+      <button class="tab-btn" onclick="setFilter('found',this)">습득물</button>
+      <button class="tab-btn" onclick="setFilter('mine',this)">내 글</button>
+    </div>
+    <div id="items-container"></div>
+  </div>
+  <button class="fab" onclick="openAddModal()" aria-label="분실물 등록">＋</button>
+</div>
+
+<!-- SUGGEST BOX -->
+<div id="suggest" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">익명 건의함</div>
+        <div class="lf-sub">다른 학생에게는 이름이 보이지 않아요</div>
+      </div>
+    </div>
+    <div class="suggest-note">글쓴이 이름은 다른 학생에게 절대 공개되지 않아요. 다만 안전을 위해 관리자 계정에서는 작성자를 확인할 수 있어요.</div>
+    <div class="tabs suggest-cat-tabs" id="suggest-category-tabs"></div>
+    <div id="suggest-container"></div>
+  </div>
+  <button class="fab" onclick="openSuggestModal()" aria-label="건의 작성">＋</button>
+</div>
+
+<!-- SCHEDULE -->
+<div id="schedule" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">학교일정</div>
+        <div class="lf-sub">2026학년도 학사일정 안내</div>
+      </div>
+    </div>
+    <div id="schedule-notice" class="sched-notice"></div>
+    <div class="tabs">
+      <button class="tab-btn" id="view-list-btn" onclick="setViewMode('list')">목록보기</button>
+      <button class="tab-btn active" id="view-cal-btn" onclick="setViewMode('calendar')">달력보기</button>
+    </div>
+    <div id="schedule-list" style="display:none"></div>
+    <div id="schedule-calendar">
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="shiftMonth(-1)" id="cal-prev">&#8249;</button>
+        <div class="cal-title" id="cal-title"></div>
+        <button class="cal-nav-btn" onclick="shiftMonth(1)" id="cal-next">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div id="cal-agenda"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CERT & CONTEST -->
+<div id="cert" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">자격증·공모전</div>
+        <div class="lf-sub">추천 자격증 정보와 교내외 공모전 안내</div>
+      </div>
+    </div>
+    <div class="sched-notice">정확한 접수 기간과 세부 요강은 학교 공지사항(가정통신문) 및 각 시행처 공식 홈페이지에서 다시 한번 확인해주세요.</div>
+    <div class="tabs">
+      <button class="tab-btn active" id="cert-tab-cert" onclick="setCertTab('cert')">자격증</button>
+      <button class="tab-btn" id="cert-tab-contest" onclick="setCertTab('contest')">공모전</button>
+    </div>
+    <div id="cert-list"></div>
+  </div>
+</div>
+
+<!-- MEAL -->
+<div id="meal" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">급식정보</div>
+        <div class="lf-sub" id="meal-week-label">주간 학교급식 영양 정보</div>
+      </div>
+    </div>
+    <div class="meal-daytabs" id="meal-daytabs"></div>
+    <div id="meal-content"></div>
+  </div>
+</div>
+
+<!-- TIMETABLE -->
+<div id="timetable" class="view">
+  <div class="lf-inner">
+    <div class="lf-topbar">
+      <button class="back-btn" onclick="showHome()">← 홈으로</button>
+    </div>
+    <div class="lf-header">
+      <svg width="36" height="36" viewBox="0 0 100 100">
+        <g class="orbit-a" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#2E3F9E" stroke-width="5" opacity="0.55"/></g>
+        <g class="orbit-b" style="transform-origin:50px 50px"><ellipse cx="50" cy="50" rx="46" ry="18" fill="none" stroke="#1F2C7A" stroke-width="5" transform="rotate(60 50 50)" opacity="0.75"/></g>
+        <circle cx="50" cy="50" r="10" fill="#1F2C7A"/>
+        <circle cx="82" cy="34" r="7" fill="#F07830"/>
+      </svg>
+      <div>
+        <div class="lf-title">시간표</div>
+        <div class="lf-sub">학번으로 자동 인식된 우리 반 시간표예요</div>
+      </div>
+    </div>
+    <div id="tt-alert"></div>
+    <div class="tt-toolbar">
+      <button class="tt-toggle-btn" id="tt-manual-btn" onclick="toggleTimetableManual()">다른 반 보기</button>
+    </div>
+    <div class="tt-form" id="tt-manual-form" style="display:none">
+      <div class="tt-form-row">
+        <label>학과</label>
+        <select class="tt-select" id="tt-dept"></select>
+      </div>
+      <div class="tt-form-row-inline">
+        <div class="tt-form-row">
+          <label>학년</label>
+          <select class="tt-select" id="tt-grade">
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+          </select>
+        </div>
+        <div class="tt-form-row">
+          <label>반</label>
+          <select class="tt-select" id="tt-class"></select>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="lookupTimetableManual()">시간표 조회</button>
+    </div>
+    <div id="timetable-result"></div>
+  </div>
+</div>
+</div>
+
+<!-- SUGGEST MODAL -->
+<div id="suggest-overlay" class="overlay" style="display:none" onclick="closeSuggestIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">익명 건의 작성</div>
+      <button class="close-btn" onclick="closeSuggestModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">카테고리</label>
+      <div class="auth-dept-list" id="suggest-form-category"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">내용</label>
+      <textarea class="form-input" id="suggest-form-text" rows="6" placeholder="학교에 건의하고 싶은 내용을 자유롭게 적어주세요"></textarea>
+    </div>
+    <div id="suggest-form-error" class="form-error" style="display:none"></div>
+    <button class="submit-btn" id="suggest-submit-btn" onclick="submitSuggest()">등록하기</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL (replaces window.confirm, which sandboxed previews can block) -->
+<div id="confirm-overlay" class="overlay" style="display:none" onclick="closeConfirmModal()">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">확인</div>
+      <button class="close-btn" onclick="closeConfirmModal()">✕</button>
+    </div>
+    <p id="confirm-message" style="font-size:13px;color:var(--ink);line-height:1.6;margin-bottom:18px;"></p>
+    <button class="submit-btn" style="background:#D64545" onclick="confirmYes()">삭제</button>
+  </div>
+</div>
+
+<!-- EVENT ADD MODAL -->
+<div id="event-overlay" class="overlay" style="display:none" onclick="closeEventIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">학사일정 추가</div>
+      <button class="close-btn" onclick="closeEventModal()">✕</button>
+    </div>
+    <div class="form-group-row">
+      <div class="form-group"><label class="form-label">월</label><input class="form-input" id="event-form-month" type="number" min="1" max="12" /></div>
+      <div class="form-group"><label class="form-label">일 (시작)</label><input class="form-input" id="event-form-day" type="number" min="1" max="31" /></div>
+      <div class="form-group"><label class="form-label">종료일 (선택)</label><input class="form-input" id="event-form-end" type="number" min="1" max="31" /></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">이름</label>
+      <input class="form-input" id="event-form-name" placeholder="예: 중간고사" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">설명 (선택)</label>
+      <input class="form-input" id="event-form-desc" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">종류</label>
+      <div class="auth-dept-list" id="event-form-tag-picker"></div>
+    </div>
+    <div id="event-form-error" class="form-error" style="display:none"></div>
+    <button class="submit-btn" onclick="submitEventForm()">저장하기</button>
+  </div>
+</div>
+
+<!-- SCHEDULE IMPORT MODAL -->
+<div id="import-overlay" class="overlay" style="display:none" onclick="closeImportIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">파일로 학사일정 가져오기</div>
+      <button class="close-btn" onclick="closeImportModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--slate);line-height:1.7;margin-bottom:14px;">
+      <b>엑셀(.xlsx)</b> 파일을 그대로 올리거나, <b>CSV로 저장</b>한 파일을 올려도 돼요.<br>
+      열 순서: <b>월, 일, 종료일(선택), 이름, 종류, 설명(선택)</b><br>
+      <span style="color:var(--orange);">※ 엑셀 파일은 인터넷 연결이 필요해요. 안 되면 CSV로 시도해주세요.</span>
+    </p>
+    <button type="button" class="tt-toggle-btn" onclick="downloadCsvTemplate()" style="margin-bottom:14px;width:100%;">양식 파일 다운로드</button>
+    <div class="form-group">
+      <label class="form-label">파일 선택</label>
+      <input class="form-input" type="file" id="import-file-input" accept=".csv,.txt,.xlsx,.xls" onchange="handleScheduleImportFile(this)" />
+    </div>
+    <div id="import-result"></div>
+  </div>
+</div>
+
+<!-- CERT ADD MODAL -->
+<div id="cert-overlay" class="overlay" style="display:none" onclick="closeCertIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">자격증·공모전 추가</div>
+      <button class="close-btn" onclick="closeCertModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">이름</label><input class="form-input" id="cert-form-name" placeholder="예: 정보처리기능사" /></div>
+    <div class="form-group"><label class="form-label">시행처</label><input class="form-input" id="cert-form-org" placeholder="예: 한국산업인력공단" /></div>
+    <div class="form-group"><label class="form-label">구분</label><input class="form-input" id="cert-form-level" placeholder="예: 국가기술자격, 교내 공모전 등" /></div>
+    <div class="form-group"><label class="form-label">시기</label><input class="form-input" id="cert-form-period" placeholder="예: 연 4회 정기 시행" /></div>
+    <div class="form-group"><label class="form-label">설명</label><textarea class="form-input" id="cert-form-desc" rows="3"></textarea></div>
+    <div id="cert-form-error" class="form-error" style="display:none"></div>
+    <button class="submit-btn" onclick="submitCertForm()">저장하기</button>
+  </div>
+</div>
+
+<!-- MEAL EDIT MODAL -->
+<div id="meal-edit-overlay" class="overlay" style="display:none" onclick="closeMealEditIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="meal-edit-title">급식 메뉴 편집</div>
+      <button class="close-btn" onclick="closeMealEditModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">메뉴 (한 줄에 하나씩)</label>
+      <textarea class="form-input" id="meal-edit-text" rows="8"></textarea>
+    </div>
+    <button class="submit-btn" onclick="submitMealEdit()">저장하기</button>
+  </div>
+</div>
+
+<!-- TIMETABLE CELL EDIT MODAL -->
+<div id="tt-edit-overlay" class="overlay" style="display:none" onclick="closeTtEditIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="tt-edit-title">시간표 칸 편집</div>
+      <button class="close-btn" onclick="closeTtEditModal()">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">과목 (비우면 빈 칸으로 지워요)</label><input class="form-input" id="tt-edit-subject" /></div>
+    <div class="form-group"><label class="form-label">교사 (선택)</label><input class="form-input" id="tt-edit-teacher" /></div>
+    <button class="submit-btn" onclick="submitTtEdit()">저장하기</button>
+  </div>
+</div>
+
+<!-- MY INFO MODAL -->
+<div id="myinfo-overlay" class="overlay" style="display:none" onclick="closeMyInfoIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">내 정보</div>
+      <button class="close-btn" onclick="closeMyInfoModal()">✕</button>
+    </div>
+    <div id="myinfo-summary" class="myinfo-summary"></div>
+    <div class="myinfo-divider"></div>
+    <p class="myinfo-hint">비밀번호를 바꾸려면 현재 비밀번호를 입력해주세요.</p>
+    <div class="form-group"><label class="form-label">현재 비밀번호</label><input class="form-input" type="password" id="myinfo-current-pw" /></div>
+    <div class="form-group"><label class="form-label">새 비밀번호 (6자 이상)</label><input class="form-input" type="password" id="myinfo-new-pw" /></div>
+    <div class="form-group"><label class="form-label">새 비밀번호 확인</label><input class="form-input" type="password" id="myinfo-new-pw2" /></div>
+    <div id="myinfo-error" class="form-error" style="display:none"></div>
+    <div id="myinfo-success" style="display:none;font-size:12px;color:#2E9E51;font-weight:700;margin-bottom:12px;"></div>
+    <button class="submit-btn" onclick="submitPasswordChange()">비밀번호 변경</button>
+    <div class="myinfo-divider"></div>
+    <button class="admin-btn" onclick="logout()" style="width:100%;justify-content:center;">로그아웃</button>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div id="add-overlay" class="overlay" style="display:none" onclick="closeAddIfOutside(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">분실물 · 습득물 등록</div>
+      <button class="close-btn" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="type-toggle">
+      <button class="type-btn selected" id="type-lost" onclick="selectType('lost')">분실물이에요</button>
+      <button class="type-btn" id="type-found" onclick="selectType('found')">습득물이에요</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">물품명</label>
+      <input class="form-input" id="form-name" placeholder="예: 검정색 무선 이어폰" />
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="form-location-label">잃어버린 장소</label>
+      <input class="form-input" id="form-location" placeholder="예: 3층 도서실, 급식실 앞" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">날짜</label>
+      <input class="form-input" type="date" id="form-date" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">설명 (선택)</label>
+      <textarea class="form-input" id="form-desc" rows="3" placeholder="색상, 특징, 브랜드 등 자세히 적어주세요"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">사진 (선택, 최대 3장)</label>
+      <div class="photo-row" id="photo-row"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">연락 방법 (선택)</label>
+      <input class="form-input" id="form-contact" placeholder="예: 2학년 3반 홍길동에게 연락 주세요" />
+    </div>
+    <div id="form-error" class="form-error" style="display:none"></div>
+    <button class="submit-btn" id="submit-btn" onclick="submitItem()">등록하기</button>
+  </div>
+</div>
+
+<!-- ADMIN MODAL -->
+<div id="admin-overlay" class="overlay" style="display:none" onclick="closeAdminIfOutside(event)">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" style="font-size:15px">관리자 암호 입력</div>
+      <button class="close-btn" onclick="closeAdminModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <div style="display:flex;gap:8px;">
+        <input class="form-input" type="password" id="admin-pass" placeholder="암호" onkeydown="if(event.key==='Enter')checkAdminPass()" style="flex:1" />
+        <button type="button" class="tt-toggle-btn" onclick="toggleAdminPassVisibility()" id="admin-pass-toggle" style="flex-shrink:0">보기</button>
+      </div>
+    </div>
+    <div id="admin-error" class="form-error" style="display:none"></div>
+    <button class="admin-submit-btn" onclick="checkAdminPass()">확인</button>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" class="lightbox" style="display:none" onclick="closeLightbox()">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <button class="lb-prev" id="lb-prev" onclick="lbPrev(event)" style="display:none">&#8249;</button>
+  <img id="lb-img" src="" alt="사진" onclick="event.stopPropagation()" />
+  <button class="lb-next" id="lb-next" onclick="lbNext(event)" style="display:none">&#8250;</button>
+  <div class="lb-counter" id="lb-counter"></div>
+</div>
+
+
+<!-- Excel(.xlsx) support — loaded from CDN, so it needs internet access.
+     If it fails to load (or the network blocks it), xlsxLoadFailed stays
+     true and the import feature falls back to a clear message telling the
+     admin to use CSV instead, which always works fully offline. -->
+<script>
+  window.xlsxLoadFailed = false;
+</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.mini.min.js" onerror="window.xlsxLoadFailed = true;"></script>
+
+<script src="js/data.js"></script>
+<script src="js/icon.js"></script>
+<script src="js/core.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/myinfo.js"></script>
+<script src="js/lostfound.js"></script>
+<script src="js/suggest.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/meal.js"></script>
+<script src="js/timetable.js"></script>
+<script src="js/cert.js"></script>
+<script src="js/portfolio.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/lucky.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
